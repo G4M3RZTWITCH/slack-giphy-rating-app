@@ -1,6 +1,10 @@
 // Require the Bolt package (github.com/slackapi/bolt)
 const { App } = require("@slack/bolt");
 const { WebClient, LogLevel } = require("@slack/web-api");
+
+var counter = (acc, curr) => {
+  return acc + (curr.count || 0);
+};
 const app = new App({
   token: process.env.SLACK_BOT_TOKEN,
   signingSecret: process.env.SLACK_SIGNING_SECRET
@@ -18,8 +22,12 @@ const client = new WebClient(process.env.SLACK_BOT_TOKEN, {
 app.command('/commsreport', async ({ ack, payload, say }) => {
   ack();
   // Store message
-  const image = await fetchMessage(payload.channel_id);
-  //await say("And the Winner is: " + (image ? image : 'No one.  No one is the winner.'));
+  const winningMessage = await fetchMessage(payload.channel_id);
+  console.log(winningMessage);
+  const image = winningMessage.blocks.find((block) => {
+    return block.type === 'image';
+  });
+  await say("And the Winner is: " + (image ? image.image_url : 'No one.  No one is the winner.'));
 });
 
 (async () => {
@@ -34,36 +42,44 @@ app.command('/commsreport', async ({ ack, payload, say }) => {
 
 let messages;
 // Fetch conversation history using the ID and a TS from the last example
-async function fetchMessage(id, ts) {
+async function fetchMessage(id, cursor, currentMessage) {
+  console.log('fetching');
+  let date = new Date();
+  date.setDate(date.getDate()-7);
+  const time = date.getTime().toString().slice(0, 10) + '.00000';
+  let reqObj = {
+    // The token you used to initialize your app
+    token: process.env.SLACK_BOT_TOKEN,
+    channel: id,
+    // In a more realistic app, you may store ts data in a db
+    // Limit results
+    inclusive: true,
+    oldest: time,
+    limit: 200
+  };
+  if (cursor) {
+    reqObj.cursor = cursor;
+  }
   try {
     // Call the conversations.history method using the built-in WebClient
-    const result = await app.client.conversations.history({
-      // The token you used to initialize your app
-      token: process.env.SLACK_BOT_TOKEN,
-      channel: id,
-      // In a more realistic app, you may store ts data in a db
-      // Limit results
-      inclusive: true
-    });
-    console.log(result.messages.length);
-
+    const result = await app.client.conversations.history(reqObj);
     // There should only be one result (stored in the zeroth index)
     messages = result.messages.filter((message) => {
       return message.bot_id && message.bot_id === process.env.SLACK_GIPHY_BOT && message.reactions;
     }).sort((a, b) => {
-      var counter = (acc, curr) => {
-        return acc + (curr.count || 0);
-      };
-      
       let bcount = b.reactions.reduce(counter, 0);
       let acount = a.reactions.reduce(counter, 0);
       return bcount - acount;
     });
-    const winningMessage = messages[0];
-    const image = winningMessage.blocks.find((block) => {
-      return block.type === 'image';
-    });
-    return image ? image.image_url : '';
+    const winningMessage = (() => {
+      if(!currentMessage || messages[0].reactions.reduce(counter, 0) > currentMessage.reactions.reduce(counter, 0)){
+        return messages[0];
+      }
+      return currentMessage;
+    })()
+      
+    return result.response_metadata.next_cursor ? fetchMessage(id, result.response_metadata.next_cursor, winningMessage) : winningMessage;
+
   }
   catch (error) {
     console.error(error);
