@@ -19,7 +19,7 @@ app.command('/commsreport', async ({ ack, payload, say }) => {
   ack();
   // Store message
   const image = await fetchMessage(payload.channel_id);
-  await say("And the Winner is: " + (image ? image : 'No one.  No one is the winner.'));
+  //await say("And the Winner is: " + (image ? image : 'No one.  No one is the winner.'));
 });
 
 (async () => {
@@ -43,9 +43,9 @@ async function fetchMessage(id, ts) {
       channel: id,
       // In a more realistic app, you may store ts data in a db
       // Limit results
-      inclusive: true,
-      limit: process.env.SLACK_MESSAGECOUNT
+      inclusive: true
     });
+    console.log(result.messages.length);
 
     // There should only be one result (stored in the zeroth index)
     messages = result.messages.filter((message) => {
