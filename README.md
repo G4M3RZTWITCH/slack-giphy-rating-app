@@ -7,3 +7,6 @@ add a slash command to find the most reacted giphy post in the current chat
 3) give your BOT OAuth permissions and invite it to any channels it needs.
 4) update the event URL to your hosted app url.  (may need to add /slack/events)
 5) create a slash command for /commsreport
+
+
+helpful documentation: https://api.slack.com/start/building/bolt-js
