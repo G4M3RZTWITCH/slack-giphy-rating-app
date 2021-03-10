@@ -19,7 +19,6 @@ app.command('/commsreport', async ({ ack, payload, say }) => {
   ack();
   // Store message
   const image = await fetchMessage(payload.channel_id);
-  
   await say("And the Winner is: " + (image ? image : 'No one.  No one is the winner.'));
 });
 
@@ -60,7 +59,6 @@ async function fetchMessage(id, ts) {
       let acount = a.reactions.reduce(counter, 0);
       return bcount - acount;
     });
-    console.log(messages);
     const winningMessage = messages[0];
     const image = winningMessage.blocks.find((block) => {
       return block.type === 'image';
@@ -71,6 +69,3 @@ async function fetchMessage(id, ts) {
     console.error(error);
   }
 }
-
-//bot id: B6MJX7N79
-//blocks ?
