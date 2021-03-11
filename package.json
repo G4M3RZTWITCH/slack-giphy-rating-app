@@ -1,7 +1,7 @@
 {
     "name": "Historic Commications Rating Service",
     "version": "0.0.1",
-    "description": "A fun way to see which giphy ",
+    "description": "A fun way to see which giphy in a given channel within a week has the most reactions",
     "main": "app.js",
     "scripts": {
       "start": "node app.js"
