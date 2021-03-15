@@ -23,7 +23,6 @@ app.command('/commsreport', async ({ ack, payload, say }) => {
   ack();
   // Store message
   const winningMessage = await fetchMessage(payload.channel_id);
-  console.log(winningMessage);
   const image = winningMessage.blocks.find((block) => {
     return block.type === 'image';
   });
@@ -72,7 +71,7 @@ async function fetchMessage(id, cursor, currentMessage) {
       return bcount - acount;
     });
     const winningMessage = (() => {
-      if(!currentMessage || messages[0].reactions.reduce(counter, 0) > currentMessage.reactions.reduce(counter, 0)){
+      if(messages && messages[0] && (!currentMessage || messages[0].reactions.reduce(counter, 0) > currentMessage.reactions.reduce(counter, 0))){
         return messages[0];
       }
       return currentMessage;
